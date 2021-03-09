@@ -1,16 +1,22 @@
-FROM alpine:3.12
+FROM 	alpine:3.12
 
-COPY createdb.sql ndeana.sql ./
-COPY setup.sh /tmp
-COPY mysql.cnf /etc/mysql/my.cnf
+RUN 	apk update
+RUN 	apk add mysql
+RUN 	apk add mysql-client
+RUN		apk add --no-cache
+RUN 	addgroup mysql mysql
 
-RUN apk update && apk add openrc
-RUN apk add --no-cache mysql mysql-client
-RUN mkdir "/run/mysqld"
-RUN chown -R mysql /run/mysqld
+COPY 	database.sql /database.sql
+COPY 	my.cnf /etc/
+COPY 	setup.sh /
+RUN 	chmod +x /setup.sh
+
+RUN		exec echo "SET PASSWORD FOR 'mysql'@'localhost'=PASSWORD('ft_services');" >> /database.sql
+RUN		exec echo "GRANT ALL ON *.* TO 'mysql'@'127.0.0.1' IDENTIFIED BY 'ft_services' WITH GRANT OPTION;" >> /database.sql
+RUN		exec echo "GRANT ALL ON *.* TO 'mysql'@'localhost' IDENTIFIED BY 'ft_services' WITH GRANT OPTION;" >> /database.sql
+RUN		exec echo "GRANT ALL ON *.* TO 'mysql'@'%' IDENTIFIED BY 'ft_services' WITH GRANT OPTION;" >> /database.sql
+RUN		exec echo "FLUSH PRIVILEGES;" >> /database.sql
 
 EXPOSE 3306
 
-RUN chown 755 /tmp/setup.sh
-
-CMD sh /tmp/setup.sh
+CMD ./setup.sh

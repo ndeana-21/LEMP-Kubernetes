@@ -1,14 +1,13 @@
-#!/bin/sh
-
-rc default
-
-mkdir /run/nginx
-mkdir /run/sshd
-chmod 744 /run/nginx
-chmod 744 /run/sshd
-
-rc-service sshd start
 ssh-keygen -A
-rc-service sshd stop
+/usr/sbin/sshd
+nginx
 
-/usr/bin/supervisor -c /etc/supervisor.conf
+while true; do
+	sleep 10
+	ps | grep nginx | grep master
+	if [ $? == 1 ]; then break
+	fi
+	ps | grep sshd | grep listener
+	if [ $? == 1 ]; then break
+	fi
+done

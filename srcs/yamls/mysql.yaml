@@ -1,32 +1,3 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-PersistentVolumeClaim
-  labels:
-    app: mysql
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-  labels:
-    app: mysql
-spec:
-  selector:
-    app: mysql
-    tier: mysql
-  ports:
-  - name: mysql
-    port: 3306
-    targetPort: 3306
-  clusterIP: None
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,27 +5,62 @@ metadata:
   labels:
     app: mysql
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: mysql
-      tier: mysql
   template:
     metadata:
       labels:
         app: mysql
-        tier: mysql
     spec:
       containers:
       - name: mysql
         image: mysql
         imagePullPolicy: Never
         ports:
-          - containerPort: 3306
-            name: mysql
+        - containerPort: 3306
+          name: mysql
+        env:
+        - name: DB_NAME
+          value: wordpress
+        - name: DB_USER
+          value: ndeanaa
+        - name: DB_PASS
+          value: ft_services
         volumeMounts:
-          - mountPath: "/var/lib/mysql"
-            name: mysql-data
+        - name: mysql-persistent
+          mountPath: /var/lib/mysql
       volumes:
-      - name: mysql-data
+      - name: mysql-persistent
         persistentVolumeClaim:
-          claimName: mysql-PersistentVolumeClaim
+          claimName: mysql-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+      metallb.universe.tf/allow-shared-ip: shared
+  name: mysql
+  labels:
+      app: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+  - name: mysql
+    port: 3306
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    app: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

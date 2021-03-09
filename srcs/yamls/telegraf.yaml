@@ -17,7 +17,7 @@ spec:
       serviceAccount: services
       containers:
       - name: telegraf
-        image: container-telegraf
+        image: telegraf
         imagePullPolicy: Never
         envFrom:
           - secretRef:

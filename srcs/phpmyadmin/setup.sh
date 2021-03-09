@@ -1,8 +1,12 @@
-#!bin/sh
+php-fpm7
+nginx
 
-rc default
-mkdir www/phpmyadmin/tmp
-mkdir /run/nginx
-chmod 777 www/phpmyadmin/tmp
-chmod 744 /run/nginx
-/usr/bin/supervisord -c /etc/supervisord.conf
+while true; do
+	sleep 10
+	ps | grep nginx | grep master
+	if [ $? == 1 ]; then break
+	fi
+	ps | grep php-fpm | grep master
+	if [ $? == 1 ]; then break
+	fi
+done

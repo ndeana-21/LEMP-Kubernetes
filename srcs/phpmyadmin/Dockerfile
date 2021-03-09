@@ -1,22 +1,35 @@
-FROM alpine:3.12
+FROM 	alpine:3.12
 
-RUN apk update
-RUN apk add --no-cache php7 php7-fpm php7-opcache	\
-			php7-gd php7-mysqli php7-zlib php7-curl	\
-			php7-mbstring php7-json php7-session openrc
+RUN		apk update
+RUN		apk add php7 php7-fpm php7-opcache php7-gd php7-mysqli php7-curl php7-json
+RUN		apk add	php7-mbstring php7-xml php7-zip php7-soap php7-ssh2 php7-tokenizer
+RUN		apk add	php7-session php7 php7-zlib nginx
 
-RUN mkdir -p /www/
-RUN wget http://files.directadmin.com/services/all/phpMyAdmin/phpMyAdmin-5.0.2-all-languages.tar.gz
-RUN tar zxvf phpMyAdmin-5.0.2-all-languages.tar.gz
-RUN rm phpMyAdmin-5.0.2-all-languages.tar.gz
-RUN mv phpMyAdmin-5.0.2-all-languages /www/phpmyadmin
+RUN		mkdir -p /www
+RUN		mkdir -p /www/tmp
+RUN 	mkdir -p /www/phpmyadmin
+RUN 	mkdir -p /www/phpmyadmin/tmp
+RUN		mkdir -p /run/nginx
 
-COPY setup.sh /tmp
-COPY config.inc.php /www/phpmyadmin/
-COPY supervisor.conf /etc/supervisor.conf
 
-EXPOSE 5000
+RUN		wget https://files.phpmyadmin.net/phpMyAdmin/5.0.4/phpMyAdmin-5.0.4-all-languages.tar.gz
+RUN 	tar xzf phpMyAdmin-5.0.4-all-languages.tar.gz --strip-components=1 -C /www
+RUN 	tar xzf phpMyAdmin-5.0.4-all-languages.tar.gz --strip-components=1 -C /www/phpmyadmin
+RUN 	rm phpMyAdmin-5.0.4-all-languages.tar.gz
 
-RUN chmod 711 /tmp/setup.sh
+RUN		adduser -D -g 'www' www
+RUN		chown -R www:www /var/lib/nginx
+RUN		chown -R www:www /www
+RUN		chown -R www:www /www/tmp
+RUN		chown -R www:www /www/phpmyadmin
+RUN		chown -R www:www /www/phpmyadmin/tmp
 
-CMD sh /tmp/setup.sh
+COPY	config.inc.php /www/
+COPY	config.inc.php /www/phpmyadmin
+COPY 	nginx.conf /etc/nginx/nginx.conf
+COPY 	setup.sh /
+RUN 	chmod +x /setup.sh
+
+EXPOSE 	5000
+
+CMD 	./setup.sh
